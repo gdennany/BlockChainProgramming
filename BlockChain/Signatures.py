@@ -3,6 +3,10 @@
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import serialization
 
 def generate_keys():
     private_key = rsa.generate_private_key(
@@ -11,12 +15,14 @@ def generate_keys():
         backend=default_backend())
 
     public_key = private_key.public_key()
-    return private_key, public_key
 
- 
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.exceptions import InvalidSignature
+    public_key_serialized = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+    return private_key, public_key_serialized
+
 
 def sign(message, private_key):
     message = bytes(str(message), 'utf-8')
@@ -30,7 +36,13 @@ def sign(message, private_key):
             )
     return signature
 
-def verify(message, signature, public_key):
+def verify(message, signature, public_key_serialized):
+
+    public_key = serialization.load_pem_public_key(
+         public_key_serialized,
+         backend=default_backend()
+     )
+
     message = bytes(str(message), 'utf-8')
     try:
         public_key.verify(

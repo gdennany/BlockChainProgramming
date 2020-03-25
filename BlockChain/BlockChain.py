@@ -24,6 +24,10 @@ class CBlock:
         hashAccumulator.update(bytes(str(self.data), 'utf8'))           #adds hashed value of input data
         hashAccumulator.update(bytes(str(self.previousHash), 'utf8'))  #prepends previous blocks hash value to the newly hashed data
         return hashAccumulator.finalize()
+    def is_valid(self):
+        if self.previousBlock == None:
+            return True
+        return self.previousBlock.computeHash() == self.previousHash
 
 if __name__ == '__main__':
     root = CBlock('I am root', None)

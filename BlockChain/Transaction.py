@@ -59,7 +59,6 @@ class Tx:
         if totalOut > totalIn:
             #print("Outputs exceed inputs")
             return False
-            
         return True
 
     def __gather(self):
@@ -68,6 +67,23 @@ class Tx:
         data.append(self.outputs)
         data.append(self.reqd)
         return data
+
+    def __repr__(self):
+        reprstr = "Inputs:\n"
+        for addr, amount in self.inputs:
+            reprstr = reprstr + str(amount) + " from " + str(addr) + "\n"
+        reprstr = reprstr + "Outputs:\n"
+        for addr, amount in self.outputs:
+            reprstr = reprstr + str(amount) + " to " + str(addr) + "\n"
+        reprstr = reprstr + "Required:\n"
+        for x in self.reqd:
+            reprstr = reprstr + str(x) + "\n"
+        reprstr = reprstr + "Signatures:\n"
+        for s in self.sigs:
+            reprstr = reprstr + str(s) + "\n"
+        reprstr = reprstr + "End\n"
+        return reprstr
+        
 
 
 if __name__ == '__main__':
