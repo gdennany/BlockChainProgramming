@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.exceptions import InvalidSignature
 
 def sign(message, private_key):
+    message = bytes(str(message), 'utf-8')
     signature = private_key.sign(
         message,
         padding.PSS(
@@ -30,6 +31,7 @@ def sign(message, private_key):
     return signature
 
 def verify(message, signature, public_key):
+    message = bytes(str(message), 'utf-8')
     try:
         public_key.verify(
         signature,
