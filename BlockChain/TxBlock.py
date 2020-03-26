@@ -4,21 +4,68 @@ from Transaction import Tx
 import pickle
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
+import time
+import random
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 
+blockReward = 25.0
+leadingZeros = 2        #number of leading zeros miners need to produce to satisfy new block 
+nextCharLimit = 20
 
 class TxBlock (CBlock):
-    
+    nonce = "XXXXXXX"
     def __init__(self, previousBlock):
         super(TxBlock, self).__init__([], previousBlock)
+    
     def addTx (self, Tx_in):
         self.data.append(Tx_in)
+    
+    def __count_totals(self):
+        totalIn = 0
+        totalOut = 0
+        for tx in self.data:
+            for addr, amount in tx.inputs:
+                totalIn = totalIn + amount
+            for addr, amount in tx.outputs:
+                totalOut = totalOut + amount
+        return (totalIn, totalOut)
+
     def is_valid(self):
         if not super(TxBlock, self).is_valid():
             return False
         for tx in self.data:
             if not tx.is_valid():
                 return False
+        totalIn, totalOut = self.__count_totals()
+        #if totalOut > (totalIn + blockReward):
+        if totalOut - totalIn - blockReward > 0.000000000001:   #fix floating point error bug
+            return False
         return True
+
+    def good_nonce(self):
+        hashAccumulator = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        hashAccumulator.update(bytes(str(self.data), 'utf8'))           #adds hashed value of input data
+        hashAccumulator.update(bytes(str(self.previousHash), 'utf8'))  #prepends previous blocks hash value to the newly hashed data
+        hashAccumulator.update(bytes(str(self.nonce), 'utf-8'))         #add nonce to hashing operation
+        currentHash = hashAccumulator.finalize()
+        #print(currentHash[:leadingZeros])
+        
+        
+        if currentHash[: leadingZeros] != bytes(''.join([ '\x00' for i in range(leadingZeros)]), 'utf-8'):
+            return False
+
+        return int(currentHash[leadingZeros]) < nextCharLimit
+
+    def find_nonce(self):
+        for i in range(1000000):
+            self.nonce = ''.join([ 
+                    chr(random.randint(0, 255)) for i in range(10 * leadingZeros)])
+            if self.good_nonce():
+                return self.nonce
+
+        return None
+    
 
 if __name__ == '__main__':
     priv1, publ1 = generate_keys()
@@ -73,7 +120,17 @@ if __name__ == '__main__':
     Tx4.sign(priv1)
     Tx4.sign(priv3)
     Block1.addTx(Tx4)
-
+    start = time.time()
+    print(Block1.find_nonce())
+    elapsed = time.time() - start
+    print("Elapsed time: " + str(elapsed) + " seconds")
+    if elapsed < 60:
+        print("Error, mining is too fast")
+    if Block1.good_nonce():
+        print("Success, Nonce is good")
+    else:
+        print("Error, bad nonce")
+    
     Block1.is_valid()
     root.is_valid()
 
@@ -92,6 +149,10 @@ if __name__ == '__main__':
         else:
             print("Error, bad block")
 
+    if Block1.good_nonce():
+        print("Success, Nonce is good after save and load")
+    else:
+        print("Error, bad nonce after load")
 
     #Testing invalid blocks
     Block2 = TxBlock(Block1)
