@@ -36,8 +36,8 @@ if __name__ == "__main__":
     Block1.addTx(Tx1)
     Block1.addTx(Tx2)
 
-    sendBlock('192.168.2.12', Block1)
-    sendBlock('192.168.2.12', Tx2)
+    sendBlock('localhost', Block1)
+    sendBlock('localhost', Tx2)
 
 
 
