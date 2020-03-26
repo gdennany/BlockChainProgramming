@@ -24,6 +24,7 @@ if __name__ == '__main__':
     priv1, publ1 = generate_keys()
     priv2, publ2 = generate_keys()
     priv3, publ3 = generate_keys()
+    priv4, publ4 = generate_keys()
 
     Tx1 = Tx()
     Tx1.add_input(publ1, 1)
@@ -108,3 +109,13 @@ if __name__ == '__main__':
         else:
             print("Success, bad block detected")
 
+
+    #Test mining rewards and transaction fees
+    Block3 = TxBlock(Block2)
+    Block3.addTx(Tx2)
+    Block3.addTx(Tx3)
+    Block3.addTx(Tx4)
+    Tx6 = Tx()
+    #miner gets reward and adds 25 to their wallet (public key)
+    Tx6.add_output(publ4, 25)
+    Block3.addTx(Tx6)
