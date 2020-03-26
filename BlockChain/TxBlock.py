@@ -116,6 +116,37 @@ if __name__ == '__main__':
     Block3.addTx(Tx3)
     Block3.addTx(Tx4)
     Tx6 = Tx()
-    #miner gets reward and adds 25 to their wallet (public key)
+    #miner gets reward and adds 25 new coins to their wallet (public key)
     Tx6.add_output(publ4, 25)
     Block3.addTx(Tx6)
+    if Block3.is_valid():
+        print("Success, block rewarded successfully")
+    else: 
+        print("Error, block reward failed")
+
+    #Miner takes transaction fees (incentive for miners to put someone elses transaction onto their block)
+    Block4 = TxBlock(Block3)
+    Block4.addTx(Tx2)
+    Block4.addTx(Tx3)
+    Block4.addTx(Tx4)
+    Tx7 = Tx()
+    Tx7.add_output(publ4, 25.2)
+    Block4.addTx(Tx7)
+    if Block4.is_valid():
+        print("Success, transaction fee rewarded successfully")
+    else: 
+        print("Error, transaction fee reward failed")
+
+    #test Greedy miner trying to add more to wallet than deserves
+    Block5 = TxBlock(Block4)
+    Block5.addTx(Tx2)
+    Block5.addTx(Tx3)
+    Block5.addTx(Tx4)
+    Tx8 = Tx()
+    Tx8.add_output(publ4, 26)
+    Block5.addTx(Tx8)
+    if not Block5.is_valid():
+        print("Success, greedy miner detected")
+    else: 
+        print("Error, greedy miner not detected")
+
