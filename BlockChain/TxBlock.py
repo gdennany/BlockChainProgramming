@@ -21,7 +21,7 @@ class TxBlock (CBlock):
     def addTx (self, Tx_in):
         self.data.append(Tx_in)
     
-    def __count_totals(self):
+    def count_totals(self):
         totalIn = 0
         totalOut = 0
         for tx in self.data:
@@ -37,7 +37,7 @@ class TxBlock (CBlock):
         for tx in self.data:
             if not tx.is_valid():
                 return False
-        totalIn, totalOut = self.__count_totals()
+        totalIn, totalOut = self.count_totals()
         #if totalOut > (totalIn + blockReward):
         if totalOut - totalIn - blockReward > 0.000000000001:   #fix floating point error bug
             return False

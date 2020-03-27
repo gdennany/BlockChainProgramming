@@ -3,20 +3,11 @@ import pickle
 import select
 
 TCP_PORT = 5005
+BUFFER_SIZE = 1024 
 
-def sendObj(ipAddr, inObj):
+def newServerConnection(ipAddr, port = TCP_PORT):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((ipAddr, TCP_PORT))
-    data = pickle.dumps(inObj)
-    s.send(data)
-    s.close()
-    return False
-
-BUFFER_SIZE = 1024
-
-def newServerConnection(ipAddr):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((ipAddr, TCP_PORT))
+    s.bind((ipAddr, port))
     s.listen()
     return s
 
@@ -32,6 +23,15 @@ def recvObj(socket):
             allData = allData + data
         return pickle.loads(allData)
     return None
+
+def sendObj(ipAddr, inObj, port = TCP_PORT):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((ipAddr, port))
+    data = pickle.dumps(inObj)
+    s.send(data)
+    s.close()
+    return False
+
     
 
 if __name__ == "__main__":
