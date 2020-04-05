@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives import hashes
 
 blockReward = 25.0
 leadingZeros = 2        #number of leading zeros miners need to produce to satisfy new block 
-nextCharLimit = 20
+nextCharLimit = 100
 
 class TxBlock (CBlock):
     nonce = "XXXXXXX"
@@ -57,8 +57,8 @@ class TxBlock (CBlock):
 
         return int(currentHash[leadingZeros]) < nextCharLimit
 
-    def find_nonce(self):
-        for i in range(1000000):
+    def find_nonce(self, numTries = 1000000):
+        for i in range(numTries):
             self.nonce = ''.join([ 
                     chr(random.randint(0, 255)) for i in range(10 * leadingZeros)])
             if self.good_nonce():

@@ -3,6 +3,7 @@ import Transaction
 import TxBlock
 import Signatures
 import threading
+import time
 
 wallets = [('localhost', 5005)]
 txList = []
@@ -29,54 +30,55 @@ def minerServer(myAddr):
     myIp, myPort = myAddr
     #Open Server Connection
     server = SocketUtils.newServerConnection(myIp, myPort)
-    #recieve two transactions wallet
-    while not breakNow: #for i in range(10):
+    #recieve transactions from wallets
+    #for i in range(10):
+    while not breakNow:
         print("Finding Nonce...")
         newTx = SocketUtils.recvObj(server)
         if isinstance(newTx, Transaction.Tx):
             txList.append(newTx)
             print("Recieved Tx")
-        if len(txList) >= 2:
-            break
+        #if len(txList) >= 2:
+        #    break
     
-    #collect those transactions into a block
-    newBlock = TxBlock.TxBlock(findLongestBlockChain())
-    newBlock.addTx(txList[0])
-    newBlock.addTx(txList[1])
+    
     return False
 
 def nonceFinder(walletList, minerPubl):
-    #compute and add mining reward
-    totalIn, totalOut = newBlock.count_totals()
-    mineReward = Transaction.Tx()
-    mineReward.add_output(myPublic, 25.0 + totalIn - totalOut)
-    newBlock.addTx(mineReward)
+    global breakNow
     
-    #Mine (i.e. find a satisfying nonce)
-    for i in range(10):
-        newBlock.find_nonce()
+    #collect those transactions into a block
+    while not breakNow:
+        newBlock = TxBlock.TxBlock(findLongestBlockChain())
+        for tx in txList:
+            newBlock.addTx(tx)
+    
+        #compute and add mining reward
+        totalIn, totalOut = newBlock.count_totals()
+        mineReward = Transaction.Tx()
+        mineReward.add_output(minerPubl, 25.0 + totalIn - totalOut)
+        newBlock.addTx(mineReward)
+        
+        #Mine (i.e. find a satisfying nonce)
+        newBlock.find_nonce(10000)
         if newBlock.good_nonce():
             print("Good nonce found")
-            break
-    if not newBlock.good_nonce():
-        print("Error: Couldnt find satisfying nonce")
-        return False
-    
-    #send that new block to each in walletList
-    for ipAddr in walletList:
-        print("Sending to "+ ipAddr)
-        SocketUtils.sendObj(ipAddr, newBlock, 5006)
-    headBlocks.remove(newBlock.previousBlock)
-    headBlocks.append(newBlock)
-    breakNow = True
+        
+        #send that new block to each in walletList
+            for ipAddr, port in walletList:
+                print("Sending to "+ ipAddr + ":" + str(port))
+                SocketUtils.sendObj(ipAddr, newBlock, 5006)
+            headBlocks.remove(newBlock.previousBlock)
+            headBlocks.append(newBlock)
     return True
 
 if __name__ == "__main__":
     myPriv, myPubl = Signatures.generate_keys()
-    
-    t1 = threading.Thread(target = minerServer, args = (('localhost', 5005),))
+    t1 = threading.Thread(target = minerServer, args = (('localhost',5005),))
     t2 = threading.Thread(target = nonceFinder, args = (wallets, myPubl,))
-    
+
+    server = SocketUtils.newServerConnection('localhost', 5006)
+
     t1.start()
     t2.start()
 
@@ -107,15 +109,13 @@ if __name__ == "__main__":
     except:
         print("Error: Connection unsuccessful")
 
-    server = SocketUtils.newServerConnection('localhost', 5006)
     for i in range(30):
         newBlock = SocketUtils.recvObj(server)
         if newBlock:
             break
-    server.close()
 
     if newBlock.is_valid():
-        print("Success, block is valid")
+       print("Success, block is valid")
     else:
         print("Error, invalid block")
     if newBlock.good_nonce():
@@ -127,10 +127,18 @@ if __name__ == "__main__":
         try:
             if tx.inputs[0][0] == publ1 and tx.inputs[0][1] == 4.0:
                 print("Tx1 is present")
+        except:
+            pass
+        try:
             if tx.inputs[0][0] == publ3 and tx.inputs[0][1] == 4.0:
                 print("Tx2 is present")  
-        except IndexError:
-            pass
+        except:
+           pass
+
+    time.sleep(20)
+    breakNow = True
+    time.sleep(2)
+    server.close()
 
 
     t1.join()
