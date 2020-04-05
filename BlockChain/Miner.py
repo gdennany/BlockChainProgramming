@@ -5,7 +5,7 @@ import Signatures
 import threading
 import time
 
-wallets = [('localhost', 5005)]
+wallets = [('localhost', 5006)]
 txList = []
 headBlocks = [None]
 breakNow = False
